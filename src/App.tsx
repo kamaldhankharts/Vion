@@ -7,11 +7,12 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ContentProvider } from './context/ContentContext';
+import { UserPreferencesProvider } from './context/UserPreferencesContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { BottomNav } from './components/BottomNav';
 import { Home } from './components/Home';
+import { ContentDetails } from './components/ContentDetails';
 import { Login } from './components/Login';
-import { AdminDashboard } from './components/AdminDashboard';
 import { MyList } from './components/MyList';
 import { Downloads } from './components/Downloads';
 import { Search } from './components/Search';
@@ -65,20 +66,22 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <ContentProvider>
-          <Router>
-            <div className="min-h-screen bg-black text-white font-sans selection:bg-white/30">
-              <Routes>
-                <Route path="/login" element={<Navigate to="/account" replace />} />
-                <Route path="/" element={<MainLayout><Home /></MainLayout>} />
-                <Route path="/my-list" element={<MainLayout><MyList /></MainLayout>} />
-                <Route path="/downloads" element={<MainLayout><Downloads /></MainLayout>} />
-                <Route path="/search" element={<MainLayout><Search /></MainLayout>} />
-                <Route path="/account" element={<MainLayout><Account /></MainLayout>} />
-                <Route path="/admin" element={<ProtectedLayout><AdminDashboard /></ProtectedLayout>} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </div>
-          </Router>
+          <UserPreferencesProvider>
+            <Router>
+              <div className="min-h-screen bg-black text-white font-sans selection:bg-white/30">
+                <Routes>
+                  <Route path="/login" element={<Navigate to="/account" replace />} />
+                  <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+                  <Route path="/details/:id" element={<MainLayout><ContentDetails /></MainLayout>} />
+                  <Route path="/my-list" element={<MainLayout><MyList /></MainLayout>} />
+                  <Route path="/downloads" element={<MainLayout><Downloads /></MainLayout>} />
+                  <Route path="/search" element={<MainLayout><Search /></MainLayout>} />
+                  <Route path="/account" element={<MainLayout><Account /></MainLayout>} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </div>
+            </Router>
+          </UserPreferencesProvider>
         </ContentProvider>
       </AuthProvider>
     </ErrorBoundary>

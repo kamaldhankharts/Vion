@@ -1,21 +1,47 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MonitorPlay, Menu, User, Tv, Radio, Edit2, X } from 'lucide-react';
+import { MonitorPlay, Menu, User, Tv, Radio, Edit2, X, Search as SearchIcon, LayoutGrid, List, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { ContentRow } from './ContentRow';
 import { useContent } from '../context/ContentContext';
 import { useAuth } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'motion/react';
 
 export const Home: React.FC = () => {
   const { content, loading } = useContent();
-  const { user, updateUserName } = useAuth();
+  const { user, updateUserName, logout } = useAuth();
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState<'movie' | 'tv' | 'live'>('movie');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newUserName, setNewUserName] = useState('');
+  const [liveTvView, setLiveTvView] = useState<'cover' | 'list'>('cover');
+  const [liveTvSearch, setLiveTvSearch] = useState('');
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const filteredContent = content.filter(item => item.type === selectedTab);
+  const filteredContent = content.filter(item => {
+    if (selectedTab === 'live') return item.type === 'live';
+    return item.type === selectedTab;
+  });
+
+  const bannerItems = filteredContent.filter(item => item.isBanner).slice(0, 10);
+  const bannerContent = bannerItems[currentBannerIndex] || filteredContent[0];
+
+  useEffect(() => {
+    if (bannerItems.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentBannerIndex((prev) => (prev + 1) % bannerItems.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [bannerItems.length]);
+
+  const liveTvContent = content.filter(item => item.type === 'live');
+  const searchedLiveTv = liveTvContent.filter(item => 
+    item.title.toLowerCase().includes(liveTvSearch.toLowerCase())
+  );
   
-  // Group content by category
+  // Group content by category for movies/tv
   const contentByCategory = filteredContent.reduce((acc, item) => {
     const category = item.category || 'Other';
     if (!acc[category]) {
@@ -25,8 +51,8 @@ export const Home: React.FC = () => {
     return acc;
   }, {} as Record<string, typeof filteredContent>);
 
-  // Find banner content for the current tab, fallback to first item if no banner is explicitly set
-  const bannerContent = filteredContent.find(item => item.isBanner) || filteredContent[0];
+  // Ensure Recommended, Popular, Trending are always present if they exist in data
+  const permanentCategories = ['Recommended', 'Popular', 'Trending'];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -43,6 +69,7 @@ export const Home: React.FC = () => {
 
   const handleTabSelect = (tab: 'movie' | 'tv' | 'live') => {
     setSelectedTab(tab);
+    setCurrentBannerIndex(0);
     setIsMenuOpen(false);
   };
 
@@ -60,6 +87,12 @@ export const Home: React.FC = () => {
       } catch (error) {
         console.error("Failed to update name", error);
       }
+    }
+  };
+
+  const handleBannerClick = () => {
+    if (bannerContent) {
+      navigate(`/details/${bannerContent.id}`);
     }
   };
 
@@ -137,10 +170,10 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* Content Rows */}
-      <div className="relative z-20 pb-8 space-y-8">
-        {loading || filteredContent.length === 0 ? (
-          <>
+      {/* Content Area */}
+      <div className="relative z-20 pb-8">
+        {loading ? (
+          <div className="space-y-8 pt-24">
             {/* Hero Banner Skeleton */}
             <div className="relative w-full h-[75vh] md:h-[85vh] bg-white/5 overflow-hidden">
               <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent" />
@@ -154,73 +187,170 @@ export const Home: React.FC = () => {
                 </div>
                 <div className="flex gap-3 overflow-x-hidden pb-4 pr-4">
                   {[1, 2, 3, 4, 5].map((item) => (
-                    <div
-                      key={item}
-                      className="relative flex-none w-[120px] flex flex-col gap-2"
-                    >
+                    <div key={item} className="relative flex-none w-[120px] flex flex-col gap-2">
                       <div className="w-full aspect-[2/3] rounded-xl bg-white/10 relative overflow-hidden">
                         <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                      </div>
-                      <div className="flex flex-col gap-1.5 px-0.5 mt-1">
-                        <div className="h-3 w-full bg-white/10 rounded overflow-hidden relative">
-                           <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                        </div>
-                        <div className="h-2.5 w-2/3 bg-white/10 rounded overflow-hidden relative">
-                           <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             ))}
-          </>
-        ) : (
-          <>
-            {/* Hero Banner */}
-            {bannerContent && (
-              <div className="relative w-full h-[75vh] md:h-[85vh] overflow-hidden">
-                <img 
-                  src={bannerContent.bannerUrl || bannerContent.posterUrl} 
-                  alt={bannerContent.title}
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end items-center text-center pb-12">
-                  {bannerContent.logoUrl ? (
-                    <img 
-                      src={bannerContent.logoUrl} 
-                      alt={bannerContent.title} 
-                      className="h-24 md:h-32 object-contain mb-4"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <h2 className="text-6xl md:text-8xl font-black text-[#ccff00] mb-3 tracking-tighter uppercase" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-                      {bannerContent.title}
-                    </h2>
-                  )}
-                  <div className="flex items-center justify-center gap-2 text-sm text-gray-300 mb-4 font-medium">
-                    {bannerContent.genre && bannerContent.genre.length > 0 && (
-                      <span>{bannerContent.genre[0]}</span>
-                    )}
-                    {bannerContent.genre && bannerContent.genre.length > 0 && <span>•</span>}
-                    <span>2026</span>
-                  </div>
-                  <p className="text-sm text-gray-300 line-clamp-2 max-w-md mx-auto mb-6">
-                    {bannerContent.description}
-                  </p>
-                  <div className="flex justify-center gap-2 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-white"></div>
-                  </div>
-                </div>
-              </div>
-            )}
+          </div>
+        ) : selectedTab === 'live' ? (
+          <div className="pt-24 px-4 space-y-6">
+            {/* Live TV Search */}
+            <div className="relative">
+              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search"
+                value={liveTvSearch}
+                onChange={(e) => setLiveTvSearch(e.target.value)}
+                className="w-full bg-[#1a1a1a] border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/10"
+              />
+            </div>
 
-            {Object.entries(contentByCategory).map(([category, items]) => (
-              <ContentRow key={category} title={category} items={items} />
-            ))}
-          </>
+            {/* Live TV Content */}
+            <div className="pb-20">
+              {liveTvView === 'cover' ? (
+                <div className="grid grid-cols-3 gap-3">
+                  {searchedLiveTv.map((item) => (
+                    <div key={item.id} className="flex flex-col gap-2">
+                      <div className="aspect-square rounded-2xl overflow-hidden bg-white/5 border border-white/5">
+                        <img src={item.posterUrl} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                      <div className="h-4 w-full bg-white/5 rounded mt-1"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {searchedLiveTv.map((item) => (
+                    <div key={item.id} className="flex items-center gap-4 bg-[#1a1a1a] p-3 rounded-2xl border border-white/5">
+                      <div className="w-16 aspect-square rounded-lg overflow-hidden bg-white/5 flex-shrink-0">
+                        <img src={item.posterUrl} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="h-4 w-3/4 bg-white/10 rounded mb-2"></div>
+                        <div className="h-3 w-1/2 bg-white/5 rounded"></div>
+                      </div>
+                      <div className="w-8 h-8 rounded-lg bg-white/5 flex-shrink-0"></div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* View Toggle Floating Button */}
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50">
+              <div className="bg-[#1a1a1a]/90 backdrop-blur-xl border border-white/10 rounded-full p-1.5 flex items-center gap-1 shadow-2xl">
+                <button 
+                  onClick={() => setLiveTvView('cover')}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-full transition-all ${liveTvView === 'cover' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                  <span className="text-sm font-bold">Cover</span>
+                </button>
+                <button 
+                  onClick={() => setLiveTvView('list')}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-full transition-all ${liveTvView === 'list' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                  <List className="w-4 h-4" />
+                  <span className="text-sm font-bold">List</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Hero Banner Carousel */}
+            <div 
+              className="relative w-full h-[75vh] md:h-[85vh] overflow-hidden cursor-pointer"
+              onClick={handleBannerClick}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={bannerContent?.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1, ease: "easeInOut" }}
+                  className="absolute inset-0"
+                >
+                  <motion.img 
+                    src={bannerContent?.bannerUrl || bannerContent?.posterUrl} 
+                    alt={bannerContent?.title}
+                    initial={{ scale: 1.1 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 6, ease: "linear" }}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.8 }}
+                    className="absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end items-center text-center pb-12"
+                  >
+                    {bannerContent?.logoUrl ? (
+                      <img 
+                        src={bannerContent.logoUrl} 
+                        alt={bannerContent.title} 
+                        className="h-20 md:h-24 object-contain mb-4"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <h2 className="text-3xl md:text-5xl font-black text-[#ccff00] mb-3 tracking-tighter uppercase" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+                        {bannerContent?.title}
+                      </h2>
+                    )}
+                    <div className="flex items-center justify-center gap-2 text-sm text-gray-300 mb-4 font-medium">
+                      {bannerContent?.genre && bannerContent.genre.length > 0 && (
+                        <span>{bannerContent.genre[0]}</span>
+                      )}
+                      {bannerContent?.genre && bannerContent.genre.length > 0 && <span>•</span>}
+                      <span>2026</span>
+                    </div>
+                    <p className="text-sm text-gray-300 line-clamp-2 max-w-md mx-auto mb-6">
+                      {bannerContent?.description}
+                    </p>
+                    <div className="flex justify-center gap-2 mb-2">
+                      {bannerItems.map((_, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentBannerIndex ? 'bg-white w-4' : 'bg-white/30'}`}
+                        />
+                      ))}
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Permanent Sections */}
+            {permanentCategories.map(category => {
+              const items = contentByCategory[category];
+              if (!items) return null;
+              return (
+                <ContentRow 
+                  key={category} 
+                  title={category} 
+                  items={items} 
+                  variant={category === 'Popular' ? 'numbered' : 'default'} 
+                />
+              );
+            })}
+
+            {/* Other Sections */}
+            {Object.entries(contentByCategory)
+              .filter(([category]) => !permanentCategories.includes(category))
+              .map(([category, items]) => (
+                <ContentRow key={category} title={category} items={items} />
+              ))
+            }
+          </div>
         )}
       </div>
 

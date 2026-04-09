@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Search as SearchIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useContent } from '../context/ContentContext';
 
 export const Search: React.FC = () => {
   const { content, loading } = useContent();
   const [query, setQuery] = useState('');
+  const navigate = useNavigate();
 
   // Just showing some content as "Recently Viewed" for now
   const recentlyViewed = content.slice(0, 4);
@@ -58,7 +60,11 @@ export const Search: React.FC = () => {
         ) : displayContent.length > 0 ? (
           <div className="grid grid-cols-3 gap-3">
             {displayContent.map((item) => (
-              <div key={item.id} className="flex flex-col gap-2 cursor-pointer group">
+              <div 
+                key={item.id} 
+                className="flex flex-col gap-2 cursor-pointer group"
+                onClick={() => navigate(`/details/${item.id}`)}
+              >
                 <div className="aspect-[2/3] rounded-xl overflow-hidden relative shadow-lg bg-white/5">
                   <img
                     src={item.posterUrl}

@@ -118,7 +118,151 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       const contentUrl = localStorage.getItem('vion_content_url');
       if (!contentUrl) {
-        setContent([]);
+        // Provide default mock data if no URL is set
+        const mockData: ContentItem[] = [
+          // TV Series - Banners (10 items)
+          ...Array.from({ length: 10 }).map((_, i) => ({
+            id: `tv-banner-${i}`,
+            title: i === 0 ? 'THE LAST OF US' : (i === 1 ? 'KING & CONQUEROR' : `EPIC TV SERIES ${i + 1}`),
+            description: i === 0 
+              ? 'Twenty years after modern civilization has been destroyed, Joel, a hardened survivor, is hired to smuggle Ellie, a 14-year-old girl, out of an oppressive quarantine zone.'
+              : i === 1
+              ? 'The story of a clash that defined the future of a country and a continent for a thousand years. Harold of Wessex and William of Normandy were two men destined to meet at the Battle of Hastings in 1066. These two former allies with no design on the British throne found themselves forced by circumstance and personal obsession into a war for possession of its crown.'
+              : 'A gripping television series that will keep you on the edge of your seat. Follow the journey of unforgettable characters in this award-winning production.',
+            posterUrl: i === 1 ? 'https://picsum.photos/seed/king-poster/800/1200' : `https://picsum.photos/seed/tv-banner-poster-${i}/800/1200`,
+            bannerUrl: i === 1 ? 'https://picsum.photos/seed/king-banner/1920/1080' : `https://picsum.photos/seed/tv-banner-${i}/1920/1080`,
+            type: 'tv' as const,
+            category: 'Recommended',
+            genre: i === 1 ? ['Drama', 'Action', 'Adventure'] : ['Drama', 'Thriller'],
+            isBanner: true,
+            seasons: i === 1 ? [
+              {
+                id: 'king-s1',
+                seasonNumber: 1,
+                episodes: [
+                  {
+                    id: 'king-s1-e1',
+                    title: 'Invitation',
+                    duration: '50m',
+                    description: 'Harold of Wessex warns his father, Earl Godwin, of a rival\'s treachery - but he is ignored.',
+                    thumbnailUrl: 'https://picsum.photos/seed/king-e1/640/360',
+                    watchUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
+                  },
+                  {
+                    id: 'king-s1-e2',
+                    title: 'The Sins of the Father',
+                    duration: '44m',
+                    description: 'Threatened by those in power in France and England, William and Harold each face grave danger, their families in peril.',
+                    thumbnailUrl: 'https://picsum.photos/seed/king-e2/640/360',
+                    watchUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
+                  },
+                  {
+                    id: 'king-s1-e3',
+                    title: 'Brothers',
+                    duration: '46m',
+                    description: 'Harold risks returning to Wessex for his wife, while William plots against Henry in France as home truths compromise family ties.',
+                    thumbnailUrl: 'https://picsum.photos/seed/king-e3/640/360',
+                    watchUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
+                  },
+                  {
+                    id: 'king-s1-e4',
+                    title: 'So Be It',
+                    duration: '49m',
+                    description: 'Crowned heads are endangered as Harold fights for his family\'s rights and William tracks his royal foe.',
+                    thumbnailUrl: 'https://picsum.photos/seed/king-e4/640/360',
+                    watchUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
+                  }
+                ]
+              }
+            ] : undefined
+          })),
+          // Movies - Banners (10 items)
+          ...Array.from({ length: 10 }).map((_, i) => ({
+            id: `banner-${i}`,
+            title: i === 0 ? 'MERCY' : `BLOCKBUSTER MOVIE ${i + 1}`,
+            description: i === 0 
+              ? 'In the near future, a detective stands on trial accused of murdering his wife. He has ninety minutes to prove his innocence to the advanced AI Judge he once championed, before it determines his fate.'
+              : 'An epic adventure awaits in this cinematic masterpiece. Experience the thrill and emotion of this highly anticipated release.',
+            posterUrl: i === 0 ? 'https://picsum.photos/seed/mercy-poster/800/1200' : `https://picsum.photos/seed/banner-poster-${i}/800/1200`,
+            bannerUrl: i === 0 ? 'https://picsum.photos/seed/mercy-banner/1920/1080' : `https://picsum.photos/seed/banner-${i}/1920/1080`,
+            type: 'movie' as const,
+            category: 'Recommended',
+            genre: i === 0 ? ['Science Fiction', 'Action', 'Thriller', 'Crime'] : ['Sci-Fi', 'Action'],
+            isBanner: true
+          })),
+          // Recommended TV
+          ...Array.from({ length: 6 }).map((_, i) => ({
+            id: `tv-rec-${i}`,
+            title: `Recommended TV ${i + 1}`,
+            description: 'A great show you should watch.',
+            posterUrl: `https://picsum.photos/seed/tv-rec-${i}/400/600`,
+            type: 'tv' as const,
+            category: 'Recommended',
+            genre: ['Drama']
+          })),
+          // Popular TV (10 items)
+          ...Array.from({ length: 10 }).map((_, i) => ({
+            id: `tv-pop-${i}`,
+            title: `Popular TV ${i + 1}`,
+            description: 'Everyone is watching this show.',
+            posterUrl: `https://picsum.photos/seed/tv-pop-${i}/400/600`,
+            type: 'tv' as const,
+            category: 'Popular',
+            genre: ['Action']
+          })),
+          // Trending TV
+          ...Array.from({ length: 6 }).map((_, i) => ({
+            id: `tv-trend-${i}`,
+            title: `Trending TV ${i + 1}`,
+            description: 'Trending show right now.',
+            posterUrl: `https://picsum.photos/seed/tv-trend-${i}/400/600`,
+            type: 'tv' as const,
+            category: 'Trending',
+            genre: ['Sci-Fi']
+          })),
+          // Recommended
+          ...Array.from({ length: 6 }).map((_, i) => ({
+            id: `rec-${i}`,
+            title: `Recommended Movie ${i + 1}`,
+            description: 'A great movie you should watch.',
+            posterUrl: `https://picsum.photos/seed/rec-${i}/400/600`,
+            type: 'movie' as const,
+            category: 'Recommended',
+            genre: ['Action']
+          })),
+          // Popular (10 items)
+          ...Array.from({ length: 10 }).map((_, i) => ({
+            id: `pop-${i}`,
+            title: `Popular Movie ${i + 1}`,
+            description: 'Everyone is watching this.',
+            posterUrl: `https://picsum.photos/seed/pop-${i}/400/600`,
+            type: 'movie' as const,
+            category: 'Popular',
+            genre: ['Drama']
+          })),
+          // Trending
+          ...Array.from({ length: 6 }).map((_, i) => ({
+            id: `trend-${i}`,
+            title: `Trending Movie ${i + 1}`,
+            description: 'Trending right now.',
+            posterUrl: `https://picsum.photos/seed/trend-${i}/400/600`,
+            type: 'movie' as const,
+            category: 'Trending',
+            genre: ['Comedy']
+          })),
+          // Live TV
+          ...Array.from({ length: 12 }).map((_, i) => ({
+            id: `live-${i}`,
+            title: `Channel ${i + 1}`,
+            description: 'Live broadcast.',
+            posterUrl: `https://picsum.photos/seed/live-${i}/400/600`,
+            type: 'live' as const,
+            category: 'Live TV',
+            genre: ['News'],
+            watchUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
+          }))
+        ];
+        setContent(mockData);
         setLoading(false);
         return;
       }

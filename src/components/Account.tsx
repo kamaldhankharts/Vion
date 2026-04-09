@@ -6,7 +6,6 @@ import {
   Monitor, HelpCircle, Star, Link, RefreshCw, Hand, FileText, FileStack, LogOut, ArrowUpRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AdminDashboard } from './AdminDashboard';
 
 export const Account: React.FC = () => {
   const { loginWithGoogle, loginWithEmail, signUpWithEmail, user, userProfile, logout } = useAuth();
@@ -82,10 +81,6 @@ export const Account: React.FC = () => {
   };
 
   if (user) {
-    if (userProfile?.role === 'admin') {
-      return <AdminDashboard />;
-    }
-
     return (
       <div className="h-[100dvh] bg-black text-white overflow-hidden relative flex flex-col">
         <div className="px-5 py-5 shrink-0 flex justify-between items-center">

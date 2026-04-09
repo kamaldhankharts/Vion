@@ -9,7 +9,6 @@ export interface User {
 export interface UserProfile {
   uid: string;
   email: string;
-  role: 'admin' | 'user';
   createdAt: any;
 }
 
@@ -45,11 +44,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
         
-        const isAdmin = parsedUser.email === 'kamaldhankhararts@gmail.com';
         setUserProfile({
           uid: parsedUser.uid,
           email: parsedUser.email || '',
-          role: isAdmin ? 'admin' : 'user',
           createdAt: new Date()
         });
       } catch (e) {
@@ -63,11 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(newUser);
     localStorage.setItem('vion_user', JSON.stringify(newUser));
     
-    const isAdmin = newUser.email === 'kamaldhankhararts@gmail.com';
     setUserProfile({
       uid: newUser.uid,
       email: newUser.email || '',
-      role: isAdmin ? 'admin' : 'user',
       createdAt: new Date()
     });
   };

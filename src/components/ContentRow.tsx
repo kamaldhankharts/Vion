@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface ContentItem {
   id: string;
@@ -15,9 +16,12 @@ interface ContentItem {
 interface ContentRowProps {
   title?: string;
   items: ContentItem[];
+  variant?: 'default' | 'numbered';
 }
 
-export const ContentRow: React.FC<ContentRowProps> = ({ title, items }) => {
+export const ContentRow: React.FC<ContentRowProps> = ({ title, items, variant = 'default' }) => {
+  const navigate = useNavigate();
+
   const handlePrefetch = (url?: string) => {
     if (!url) return;
     if (!document.querySelector(`link[href="${url}"]`)) {
@@ -29,10 +33,14 @@ export const ContentRow: React.FC<ContentRowProps> = ({ title, items }) => {
     }
   };
 
+  const handleClick = (item: ContentItem) => {
+    navigate(`/details/${item.id}`);
+  };
+
   return (
-    <div className="w-full py-2 pl-4">
+    <div className="w-full py-2">
       {title && (
-        <div className="flex items-center gap-1 mb-3 cursor-pointer group">
+        <div className="flex items-center gap-1 mb-3 cursor-pointer group px-4">
           <h2 className="text-[15px] font-bold text-white uppercase tracking-wide">
             {title}
           </h2>
@@ -41,27 +49,38 @@ export const ContentRow: React.FC<ContentRowProps> = ({ title, items }) => {
       )}
       
       <div 
-        className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4 pr-4"
+        className={`flex ${variant === 'numbered' ? 'gap-10 pl-8 pr-4' : 'gap-3 px-4'} overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4`}
       >
-        {items.map((item) => (
+        {items.map((item, index) => (
           <motion.div
             key={item.id}
             whileHover={{ scale: 1.02 }}
             onMouseEnter={() => handlePrefetch(item.watchUrl)}
-            className="relative flex-none w-[120px] flex flex-col gap-2 snap-start cursor-pointer"
+            onClick={() => handleClick(item)}
+            className={`relative flex-none ${variant === 'numbered' ? 'w-[105px]' : 'w-[120px]'} flex flex-col gap-2 snap-start cursor-pointer`}
           >
-            <div className="w-full aspect-[2/3] rounded-xl overflow-hidden relative shadow-lg bg-white/5">
-              <img 
-                src={item.posterUrl} 
-                alt={item.title} 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
+            <div className="relative flex items-end">
+              {variant === 'numbered' && (
+                <span 
+                  className="absolute -left-5 -bottom-3 text-[110px] font-black leading-none text-transparent select-none z-20" 
+                  style={{ WebkitTextStroke: '1.5px rgba(255,255,255,0.8)', textShadow: '0 0 15px rgba(0,0,0,0.5)' }}
+                >
+                  {index + 1}
+                </span>
+              )}
+              <div className="w-full aspect-[2/3] rounded-xl overflow-hidden relative shadow-lg bg-white/5 z-10">
+                <img 
+                  src={item.posterUrl} 
+                  alt={item.title} 
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
             </div>
             <div className="flex flex-col px-0.5">
               <span className="text-sm font-medium text-white truncate">{item.title}</span>
               <span className="text-[11px] text-gray-400 mt-0.5">
-                {item.genre && item.genre.length > 0 ? item.genre[0] : 'Movie'} · 2026
+                {item.genre && item.genre.length > 0 ? item.genre[0] : (item.type === 'tv' ? 'TV Series' : 'Movie')} · 2026
               </span>
             </div>
           </motion.div>

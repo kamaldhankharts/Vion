@@ -46,7 +46,7 @@ export const BottomNav = () => {
     };
   }, []);
 
-  if (path === '/account' && !user) return null;
+  if (path === '/account' && (!user || user.email === 'kamaldhankhararts@gmail.com')) return null;
   if (isHidden) return null;
 
   const navItems = [
