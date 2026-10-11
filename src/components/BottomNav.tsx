@@ -58,24 +58,29 @@ export const BottomNav = () => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#0a0a0a] border-t border-white/5 px-2 py-2 pb-4 z-50">
-      <div className="flex justify-between items-center max-w-md mx-auto px-2">
-        {navItems.map((item) => {
-          const isActive = path === item.path;
-          const Icon = item.icon;
-          return (
-            <Link key={item.path} to={item.path} className="flex flex-col items-center gap-1 w-16">
-              <div className={`px-5 py-1 rounded-full flex items-center justify-center ${isActive ? 'bg-white/20' : ''}`}>
-                <Icon className={`w-6 h-6 ${isActive ? 'text-white fill-white' : 'text-gray-400'}`} strokeWidth={isActive ? 2 : 1.5} />
-              </div>
-              <span className={`text-[10px] ${isActive ? 'text-white font-medium' : 'text-gray-400'}`}>
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
+    <div
+      className="fixed left-0 right-0 z-50 px-4 pointer-events-none"
+      style={{ bottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+    >
+      {/* Glassmorphism bar, same look as the Cover/List and Movies pills */}
+      <div className="pointer-events-auto max-w-md mx-auto bg-[#1a1a1a]/60 backdrop-blur-xl border border-white/10 rounded-[32px] shadow-2xl px-2 py-2">
+        <div className="flex justify-between items-center">
+          {navItems.map((item) => {
+            const isActive = path === item.path;
+            const Icon = item.icon;
+            return (
+              <Link key={item.path} to={item.path} className="flex flex-col items-center gap-1 w-16">
+                <div className={`px-5 py-1 rounded-full flex items-center justify-center transition-colors ${isActive ? 'bg-white/20 backdrop-blur-md' : ''}`}>
+                  <Icon className={`w-6 h-6 ${isActive ? 'text-white fill-white' : 'text-gray-300'}`} strokeWidth={isActive ? 2 : 1.5} />
+                </div>
+                <span className={`text-[10px] ${isActive ? 'text-white font-medium' : 'text-gray-300'}`}>
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 };
-
