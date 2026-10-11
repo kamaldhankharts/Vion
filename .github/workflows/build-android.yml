@@ -37,10 +37,10 @@ jobs:
 
       - name: Patch MainActivity (no overscroll stretch, no native scrollbars)
         run: |
-          DIR=android/app/src/main/java/com/kamal/vion
+          DIR=android/app/src/main/java/com/blaze/vion
           mkdir -p $DIR
           cat > $DIR/MainActivity.java <<'JAVA'
-          package com.kamal.vion;
+          package com.blaze.vion;
 
           import android.os.Bundle;
           import android.view.View;
