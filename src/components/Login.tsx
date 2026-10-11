@@ -29,7 +29,7 @@ const friendlyError = (err: any): string => {
 };
 
 export const Login: React.FC = () => {
-  const { loginWithEmail, signUpWithEmail, resetPassword, loginWithGoogle } = useAuth();
+  const { loginWithEmail, signUpWithEmail, resetPassword, loginWithGoogle, notice, clearNotice } = useAuth();
   const navigate = useNavigate();
 
   const [isSignUp, setIsSignUp] = useState(false);
@@ -43,6 +43,7 @@ export const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearNotice();
     setError('');
     setInfo('');
 
@@ -72,6 +73,7 @@ export const Login: React.FC = () => {
   };
 
   const handleGoogle = async () => {
+    clearNotice();
     setError('');
     setInfo('');
     setLoading(true);
@@ -142,9 +144,9 @@ export const Login: React.FC = () => {
         </p>
 
         <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-3">
-          {error && (
+          {(error || notice) && (
             <div className="bg-red-500/20 border border-red-500/50 text-red-200 text-xs p-3 rounded-xl text-center">
-              {error}
+              {error || notice}
             </div>
           )}
           {info && (

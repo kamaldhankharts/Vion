@@ -14,6 +14,7 @@ import {
 import { useContent, ContentItem, Episode, Season } from '../context/ContentContext';
 import { VideoPlayer } from './VideoPlayer';
 import { useUserPreferences } from '../context/UserPreferencesContext';
+import { openLink } from '../utils/openLink';
 
 export const ContentDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -118,8 +119,24 @@ export const ContentDetails = () => {
           
           <div className="flex items-center gap-2 text-xs md:text-sm text-gray-400 font-medium mb-6">
             <span>{item.genre.join(', ')}</span>
-            <span>•</span>
-            <span>2026</span>
+            {item.releaseDate && String(item.releaseDate).slice(0, 4) && (
+              <>
+                <span>•</span>
+                <span>{String(item.releaseDate).slice(0, 4)}</span>
+              </>
+            )}
+            {Number(item.rating) > 0 && (
+              <>
+                <span>•</span>
+                <span>★ {Number(item.rating).toFixed(1)}</span>
+              </>
+            )}
+            {item.ageRating && (
+              <>
+                <span>•</span>
+                <span>{item.ageRating}</span>
+              </>
+            )}
             {item.type === 'tv' && item.seasons && (
               <>
                 <span>•</span>
@@ -177,10 +194,35 @@ export const ContentDetails = () => {
         </div>
 
         {/* Description */}
-        <div className="mb-10">
-          <p className="text-gray-300 text-[15px] leading-relaxed line-clamp-4 md:line-clamp-none">
-            {item.description}
-          </p>
+        <div className="mb-10 space-y-3">
+          {item.description && (
+            <p className="text-gray-300 text-[15px] leading-relaxed line-clamp-4 md:line-clamp-none">
+              {item.description}
+            </p>
+          )}
+          {[
+            ['Cast', item.cast],
+            ['Director', item.director],
+            ['Duration', item.duration || (item.episodeRunTime ? `${item.episodeRunTime} min` : '')],
+            ['Country', item.country],
+            ['Languages', item.languages?.join(', ')],
+            ['Quality', item.quality?.join(', ')],
+          ].map(([label, value]) =>
+            value ? (
+              <p key={label as string} className="text-sm">
+                <span className="text-gray-500">{label}: </span>
+                <span className="text-gray-300">{value}</span>
+              </p>
+            ) : null
+          )}
+          {item.trailerUrl && (
+            <button
+              onClick={() => openLink(item.trailerUrl!)}
+              className="mt-1 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-sm font-semibold"
+            >
+              Watch trailer
+            </button>
+          )}
         </div>
 
         {/* Episodes Section for TV Series */}

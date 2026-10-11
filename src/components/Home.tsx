@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MonitorPlay, Menu, User, Tv, Radio, Edit2, X, Search as SearchIcon, LayoutGrid, List, LogOut } from 'lucide-react';
+import { MonitorPlay, Menu, User, Tv, Radio, Edit2, X, Search as SearchIcon, LayoutGrid, List, LogOut, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ContentRow } from './ContentRow';
 import { useContent } from '../context/ContentContext';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationsContext';
 import { motion, AnimatePresence } from 'motion/react';
 import logo from '../assets/logo.png';
 
@@ -11,6 +12,7 @@ export const Home: React.FC = () => {
   const { content, loading } = useContent();
   const { user, updateUserName, logout } = useAuth();
   const navigate = useNavigate();
+  const { unreadCount } = useNotifications();
   const [selectedTab, setSelectedTab] = useState<'movie' | 'tv' | 'live'>('movie');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -122,6 +124,14 @@ export const Home: React.FC = () => {
           <button className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
             {getTabIcon()}
             <span className="text-sm font-medium text-white">{getTabLabel()}</span>
+          </button>
+          <button className="p-1 relative" onClick={() => navigate('/notifications')} aria-label="Notifications">
+            <Bell className="w-6 h-6 text-white" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-[10px] font-bold flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
           <button className="p-1" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             <Menu className="w-6 h-6 text-white" />

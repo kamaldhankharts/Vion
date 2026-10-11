@@ -10,12 +10,18 @@ export interface Episode {
   thumbnailUrl?: string;
   watchUrl: string;
   duration?: string;
+  episodeNumber?: number;
+  releaseDate?: string;
+  rating?: number | string;
 }
 
 export interface Season {
   id: string;
   seasonNumber: number;
   title?: string;
+  overview?: string;
+  cover?: string;
+  airDate?: string;
   episodes: Episode[];
 }
 
@@ -38,6 +44,21 @@ export interface ContentItem {
   rating?: number;
   isBanner?: boolean;
   createdAt?: any;
+  originalTitle?: string;
+  screenshots?: string[];
+  cast?: string;
+  director?: string;
+  releaseDate?: string;
+  duration?: string;
+  country?: string;
+  ageRating?: string;
+  tmdbId?: string | number;
+  trailerUrl?: string;
+  episodeRunTime?: string | number;
+  channelNumber?: number;
+  epgId?: string;
+  tvArchive?: boolean;
+  edited?: boolean;
 }
 
 interface ContentContextType {
@@ -57,15 +78,27 @@ export const useContent = () => {
 
 type Parts = { movies: ContentItem[]; tv: ContentItem[]; live: ContentItem[] };
 
-// Realtime Database drops empty arrays/strings, so give every item safe defaults.
+// Realtime Database turns arrays into objects and drops empty ones, so rebuild them safely.
+const toArr = (v: any): any[] => (!v ? [] : Array.isArray(v) ? v.filter((x) => x != null) : Object.values(v));
+const byNum = (k: string) => (a: any, b: any) => (Number(a[k]) || 0) - (Number(b[k]) || 0);
+
 const normalize = (raw: any): ContentItem => ({
   ...raw,
   title: raw.title || 'Untitled',
   description: raw.description || '',
   posterUrl: raw.posterUrl || '',
-  genre: Array.isArray(raw.genre) ? raw.genre : [],
-  seasons: Array.isArray(raw.seasons)
-    ? raw.seasons.map((s: any) => ({ ...s, episodes: Array.isArray(s.episodes) ? s.episodes : [] }))
+  genre: toArr(raw.genre),
+  languages: raw.languages ? toArr(raw.languages) : undefined,
+  quality: raw.quality ? toArr(raw.quality) : undefined,
+  screenshots: raw.screenshots ? toArr(raw.screenshots) : undefined,
+  seasons: raw.seasons
+    ? toArr(raw.seasons)
+        .map((s: any) => ({
+          ...s,
+          seasonNumber: Number(s.seasonNumber) || 0,
+          episodes: toArr(s.episodes).sort(byNum('episodeNumber')),
+        }))
+        .sort(byNum('seasonNumber'))
     : undefined,
 });
 

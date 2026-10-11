@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ContentProvider } from './context/ContentContext';
 import { UserPreferencesProvider } from './context/UserPreferencesContext';
+import { NotificationsProvider } from './context/NotificationsContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { BottomNav } from './components/BottomNav';
 import { Home } from './components/Home';
@@ -17,6 +18,8 @@ import { MyList } from './components/MyList';
 import { Downloads } from './components/Downloads';
 import { Search } from './components/Search';
 import { Account } from './components/Account';
+import { Notifications } from './components/Notifications';
+import { NotificationBanner } from './components/NotificationBanner';
 import { Loader2 } from 'lucide-react';
 
 const ProtectedLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -66,6 +69,7 @@ export default function App() {
       <AuthProvider>
         <ContentProvider>
           <UserPreferencesProvider>
+            <NotificationsProvider>
             <Router>
               <div className="min-h-screen bg-black text-white font-sans selection:bg-white/30">
                 <Routes>
@@ -76,10 +80,13 @@ export default function App() {
                   <Route path="/downloads" element={<ProtectedLayout><Downloads /></ProtectedLayout>} />
                   <Route path="/search" element={<ProtectedLayout><Search /></ProtectedLayout>} />
                   <Route path="/account" element={<ProtectedLayout><Account /></ProtectedLayout>} />
+                  <Route path="/notifications" element={<ProtectedLayout><Notifications /></ProtectedLayout>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
+                <NotificationBanner />
               </div>
             </Router>
+            </NotificationsProvider>
           </UserPreferencesProvider>
         </ContentProvider>
       </AuthProvider>

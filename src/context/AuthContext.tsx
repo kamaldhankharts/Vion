@@ -14,7 +14,7 @@ import {
 } from 'firebase/auth';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
-import { ref, update } from 'firebase/database';
+import { ref, update, onValue } from 'firebase/database';
 import { auth, db } from '../firebase';
 
 export interface User {
@@ -33,6 +33,8 @@ interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  notice: string | null;
+  clearNotice: () => void;
   loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
@@ -68,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     // Firebase restores the saved session, then tells us who is signed in.
@@ -150,6 +153,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signOut(auth);
   };
 
+  // The admin can deactivate a user: sign them out straight away.
+  useEffect(() => {
+    if (!user?.uid) return;
+    return onValue(
+      ref(db, `userStatus/${user.uid}`),
+      (snap) => {
+        if (snap.val()?.disabled === true) {
+          setNotice('Your account has been deactivated. Please contact support.');
+          logout();
+        }
+      },
+      () => {}
+    );
+  }, [user?.uid]);
+
+  const clearNotice = () => setNotice(null);
+
   const updateUserName = async (name: string) => {
     const current = auth.currentUser;
     if (!current) return;
@@ -160,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider
-      value={{ user, userProfile, loading, loginWithGoogle, loginWithEmail, signUpWithEmail, resetPassword, logout, updateUserName }}
+      value={{ user, userProfile, loading, notice, clearNotice, loginWithGoogle, loginWithEmail, signUpWithEmail, resetPassword, logout, updateUserName }}
     >
       {children}
     </AuthContext.Provider>
