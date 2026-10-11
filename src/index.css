@@ -34,3 +34,17 @@
     animation: shine 1.5s infinite linear;
   }
 }
+
+/* Stop the Android "stretch" / rubber-band effect when scrolling */
+html,
+body,
+#root {
+  background-color: #000;
+  overscroll-behavior: none;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
