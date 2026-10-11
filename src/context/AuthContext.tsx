@@ -6,8 +6,14 @@ import {
   updateProfile,
   signOut,
   sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithCredential,
+  signInWithPopup,
+  getAdditionalUserInfo,
   User as FirebaseUser,
 } from 'firebase/auth';
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { ref, update } from 'firebase/database';
 import { auth, db } from '../firebase';
 
@@ -27,6 +33,7 @@ interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -83,6 +90,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
+  const loginWithGoogle = async () => {
+    let result;
+    if (Capacitor.isNativePlatform()) {
+      // Native Google account picker, then hand the token to the Firebase JS SDK
+      const native = await FirebaseAuthentication.signInWithGoogle();
+      const idToken = native.credential?.idToken;
+      if (!idToken) throw new Error('Google sign-in did not return a token. Please try again.');
+      result = await signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
+    } else {
+      result = await signInWithPopup(auth, new GoogleAuthProvider());
+    }
+    const u = result.user;
+    const isNew = getAdditionalUserInfo(result)?.isNewUser;
+    await saveProfile(u.uid, {
+      uid: u.uid,
+      email: u.email,
+      displayName: u.displayName || null,
+      ...(isNew ? { createdAt: Date.now() } : {}),
+      lastLoginAt: Date.now(),
+    });
+  };
+
   const loginWithEmail = async (email: string, password: string) => {
     const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
     await saveProfile(cred.user.uid, {
@@ -111,6 +140,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await FirebaseAuthentication.signOut();
+      } catch (e) {
+        // ignore: not signed in natively
+      }
+    }
     await signOut(auth);
   };
 
@@ -124,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider
-      value={{ user, userProfile, loading, loginWithEmail, signUpWithEmail, resetPassword, logout, updateUserName }}
+      value={{ user, userProfile, loading, loginWithGoogle, loginWithEmail, signUpWithEmail, resetPassword, logout, updateUserName }}
     >
       {children}
     </AuthContext.Provider>
