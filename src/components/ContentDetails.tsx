@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import { useContent, ContentItem, Episode, Season } from '../context/ContentContext';
+import { VideoPlayer } from './VideoPlayer';
 import { useUserPreferences } from '../context/UserPreferencesContext';
 
 export const ContentDetails = () => {
@@ -53,7 +54,8 @@ export const ContentDetails = () => {
   }
 
   const handleWatch = (url?: string) => {
-    const videoUrl = url || item.watchUrl || 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+    const videoUrl = url || item.watchUrl;
+    if (!videoUrl) return; // nothing to play: the admin hasn't published a stream for this title
     setActiveVideoUrl(videoUrl);
     setIsPlaying(true);
   };
@@ -273,12 +275,7 @@ export const ContentDetails = () => {
             </div>
             
             <div className="flex-1 w-full h-full flex items-center justify-center">
-              <iframe 
-                src={activeVideoUrl}
-                className="w-full h-full border-none"
-                allowFullScreen
-                allow="autoplay; encrypted-media"
-              />
+              <VideoPlayer url={activeVideoUrl} />
             </div>
           </motion.div>
         )}

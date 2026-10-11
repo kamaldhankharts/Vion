@@ -35,6 +35,12 @@ jobs:
         run: |
           if [ ! -d android ]; then npx cap add android; fi
 
+      - name: Allow http:// streams (cleartext traffic)
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          grep -q usesCleartextTraffic $M || sed -i 's/<application/<application android:usesCleartextTraffic="true"/' $M
+          grep -n "usesCleartextTraffic" $M
+
       - name: Add Firebase config and Google Services plugin
         run: |
           cp google-services.json android/app/google-services.json
