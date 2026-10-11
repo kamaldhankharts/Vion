@@ -1,4 +1,15 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signOut,
+  sendPasswordResetEmail,
+  User as FirebaseUser,
+} from 'firebase/auth';
+import { ref, update } from 'firebase/database';
+import { auth, db } from '../firebase';
 
 export interface User {
   uid: string;
@@ -16,9 +27,9 @@ interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
-  loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUserName: (name: string) => Promise<void>;
 }
@@ -31,88 +42,90 @@ export const useAuth = () => {
   return context;
 };
 
+const toUser = (u: FirebaseUser): User => ({
+  uid: u.uid,
+  email: u.email,
+  displayName: u.displayName,
+});
+
+// Saving the profile must never block login, so errors are only logged.
+const saveProfile = async (uid: string, data: Record<string, any>) => {
+  try {
+    await update(ref(db, `users/${uid}/profile`), data);
+  } catch (e) {
+    console.warn('Could not save profile to Realtime Database', e);
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check local storage for user
-    const storedUser = localStorage.getItem('vion_user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        
+    // Firebase restores the saved session, then tells us who is signed in.
+    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      if (fbUser) {
+        setUser(toUser(fbUser));
         setUserProfile({
-          uid: parsedUser.uid,
-          email: parsedUser.email || '',
-          createdAt: new Date()
+          uid: fbUser.uid,
+          email: fbUser.email || '',
+          createdAt: fbUser.metadata.creationTime
+            ? new Date(fbUser.metadata.creationTime)
+            : new Date(),
         });
-      } catch (e) {
-        console.error("Failed to parse stored user", e);
+      } else {
+        setUser(null);
+        setUserProfile(null);
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    });
+    return unsubscribe;
   }, []);
 
-  const handleAuthSuccess = (newUser: User) => {
-    setUser(newUser);
-    localStorage.setItem('vion_user', JSON.stringify(newUser));
-    
-    setUserProfile({
-      uid: newUser.uid,
-      email: newUser.email || '',
-      createdAt: new Date()
+  const loginWithEmail = async (email: string, password: string) => {
+    const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
+    await saveProfile(cred.user.uid, {
+      uid: cred.user.uid,
+      email: cred.user.email,
+      displayName: cred.user.displayName || null,
+      lastLoginAt: Date.now(),
     });
   };
 
-  const loginWithGoogle = async () => {
-    // Mock Google login
-    const mockUser: User = {
-      uid: 'google_user_' + Date.now(),
-      email: 'user@gmail.com',
-      displayName: 'Google User'
-    };
-    handleAuthSuccess(mockUser);
-  };
-
-  const loginWithEmail = async (email: string, password: string) => {
-    // Mock email login
-    const mockUser: User = {
-      uid: 'email_user_' + Date.now(),
-      email: email,
-      displayName: email.split('@')[0]
-    };
-    handleAuthSuccess(mockUser);
-  };
-
   const signUpWithEmail = async (email: string, password: string, name: string) => {
-    // Mock email signup
-    const mockUser: User = {
-      uid: 'email_user_' + Date.now(),
-      email: email,
-      displayName: name
-    };
-    handleAuthSuccess(mockUser);
+    const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
+    await updateProfile(cred.user, { displayName: name.trim() });
+    setUser(toUser(cred.user));
+    await saveProfile(cred.user.uid, {
+      uid: cred.user.uid,
+      email: cred.user.email,
+      displayName: name.trim(),
+      createdAt: Date.now(),
+      lastLoginAt: Date.now(),
+    });
+  };
+
+  const resetPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email.trim());
   };
 
   const logout = async () => {
-    setUser(null);
-    setUserProfile(null);
-    localStorage.removeItem('vion_user');
+    await signOut(auth);
   };
 
   const updateUserName = async (name: string) => {
-    if (user) {
-      const updatedUser = { ...user, displayName: name };
-      setUser(updatedUser);
-      localStorage.setItem('vion_user', JSON.stringify(updatedUser));
-    }
+    const current = auth.currentUser;
+    if (!current) return;
+    await updateProfile(current, { displayName: name.trim() });
+    setUser(toUser(current));
+    await saveProfile(current.uid, { displayName: name.trim() });
   };
 
   return (
-    <AuthContext.Provider value={{ user, userProfile, loading, loginWithGoogle, loginWithEmail, signUpWithEmail, logout, updateUserName }}>
+    <AuthContext.Provider
+      value={{ user, userProfile, loading, loginWithEmail, signUpWithEmail, resetPassword, logout, updateUserName }}
+    >
       {children}
     </AuthContext.Provider>
   );
