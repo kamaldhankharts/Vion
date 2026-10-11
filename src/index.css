@@ -47,3 +47,11 @@ html,
 body {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Hide all scroll indicators */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}

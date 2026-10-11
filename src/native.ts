@@ -1,13 +1,18 @@
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
-import { StatusBar, Style } from '@capacitor/status-bar';
+import { StatusBar } from '@capacitor/status-bar';
 
 // Only runs inside the installed Android app, not in the browser.
 export function initNative() {
   if (!Capacitor.isNativePlatform()) return;
 
-  StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-  StatusBar.setBackgroundColor({ color: '#000000' }).catch(() => {});
+  // Fullscreen: hide the status bar (network, battery, time...)
+  const hideStatusBar = () => {
+    StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+    StatusBar.hide().catch(() => {});
+  };
+  hideStatusBar();
+  App.addListener('resume', hideStatusBar);
 
   // Android back button: go back in history, exit app when at the start.
   App.addListener('backButton', ({ canGoBack }) => {

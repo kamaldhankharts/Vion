@@ -35,6 +35,29 @@ jobs:
         run: |
           if [ ! -d android ]; then npx cap add android; fi
 
+      - name: Patch MainActivity (no overscroll stretch, no native scrollbars)
+        run: |
+          DIR=android/app/src/main/java/com/kamal/vion
+          mkdir -p $DIR
+          cat > $DIR/MainActivity.java <<'JAVA'
+          package com.kamal.vion;
+
+          import android.os.Bundle;
+          import android.view.View;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  View web = getBridge().getWebView();
+                  web.setOverScrollMode(View.OVER_SCROLL_NEVER);
+                  web.setVerticalScrollBarEnabled(false);
+                  web.setHorizontalScrollBarEnabled(false);
+              }
+          }
+          JAVA
+
       - name: Generate icons and splash (if assets/ exists)
         if: ${{ hashFiles('assets/icon-only.png') != '' }}
         run: npx capacitor-assets generate --android
