@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { X, Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -103,17 +103,32 @@ export const Login: React.FC = () => {
     }
   };
 
+  // Lock the page itself so the whole login screen can't slide up/down.
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prev = { h: html.style.overflow, b: body.style.overflow };
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    return () => {
+      html.style.overflow = prev.h;
+      body.style.overflow = prev.b;
+    };
+  }, []);
+
   const inputClass =
     'w-full bg-white/10 border border-transparent rounded-2xl py-3.5 px-5 text-white placeholder-gray-400 focus:outline-none focus:border-white/20';
 
   return (
-    <div className="h-[100dvh] bg-black flex flex-col relative overflow-y-auto">
+    <div className="fixed inset-0 bg-black overflow-hidden">
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#7a1010] via-[#3a0505] to-black opacity-90" />
 
+      {/* Only scrolls if the content doesn't fit (e.g. keyboard open) */}
+      <div className="relative z-10 h-full overflow-y-auto overscroll-none">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-full flex flex-col items-center justify-center px-6 py-10"
       >
         <img src={logo} alt="ViON" className="h-14 w-auto object-contain mb-6" />
 
@@ -243,6 +258,7 @@ export const Login: React.FC = () => {
           </button>
         </form>
       </motion.div>
+      </div>
     </div>
   );
 };
