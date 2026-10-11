@@ -5,6 +5,7 @@ import { ContentRow } from './ContentRow';
 import { useContent } from '../context/ContentContext';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
+import logo from '../assets/logo.png';
 
 export const Home: React.FC = () => {
   const { content, loading } = useContent();
@@ -116,7 +117,7 @@ export const Home: React.FC = () => {
     <div className="min-h-screen bg-black text-white pb-24">
       {/* Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-40 px-4 py-6 flex justify-between items-center bg-gradient-to-b from-black/80 via-black/40 to-transparent">
-        <h1 className="text-[28px] font-bold text-white tracking-wider">ViON</h1>
+        <img src={logo} alt="ViON" className="h-9 w-auto object-contain" />
         <div className="flex items-center gap-4 relative" ref={menuRef}>
           <button className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
             {getTabIcon()}

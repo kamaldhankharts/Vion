@@ -40,11 +40,10 @@ html,
 body,
 #root {
   background-color: #000;
-  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
 
 html,
 body {
-  overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
 }

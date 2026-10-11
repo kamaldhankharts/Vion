@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Play } from 'lucide-react';
 import { motion } from 'motion/react';
+import logo from '../assets/logo.png';
 
 export const Login: React.FC = () => {
   const { loginWithGoogle, user } = useAuth();
@@ -36,7 +37,7 @@ export const Login: React.FC = () => {
           <Play className="w-8 h-8 fill-black" />
         </div>
         
-        <h1 className="text-4xl font-black text-white tracking-tighter mb-2">ViON</h1>
+        <img src={logo} alt="ViON" className="h-14 w-auto object-contain mb-4" />
         <p className="text-gray-400 text-center mb-10">Sign in to access 600K+ movies, TV series, and live channels.</p>
 
         <button 
