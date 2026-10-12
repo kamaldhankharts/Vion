@@ -3,13 +3,15 @@ import { MonitorPlay, Menu, User, Tv, Radio, Edit2, X, Search as SearchIcon, Lay
 import { useNavigate } from 'react-router-dom';
 import { ContentRow } from './ContentRow';
 import { useContent } from '../context/ContentContext';
+import { useTmdbArt } from '../useTmdbArt';
+import { prefetchTmdbArt } from '../tmdb';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationsContext';
 import { motion, AnimatePresence } from 'motion/react';
 import logo from '../assets/logo.png';
 
 export const Home: React.FC = () => {
-  const { content, loading } = useContent();
+  const { content, loading, ready, ensureSection } = useContent();
   const { user, updateUserName, logout } = useAuth();
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
@@ -20,6 +22,7 @@ export const Home: React.FC = () => {
   const [liveTvView, setLiveTvView] = useState<'cover' | 'list'>('cover');
   const [liveTvSearch, setLiveTvSearch] = useState('');
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [liveShown, setLiveShown] = useState(60);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const filteredContent = content.filter(item => {
@@ -29,6 +32,20 @@ export const Home: React.FC = () => {
 
   const bannerItems = filteredContent.filter(item => item.isBanner).slice(0, 10);
   const bannerContent = bannerItems[currentBannerIndex] || filteredContent[0];
+
+  // TMDB: title logo PNG + plain (text-free) background for the banner
+  const { art: bannerArt, ready: bannerArtReady } = useTmdbArt(bannerContent);
+  const bannerKey = bannerItems.map((i) => i.id).join(',');
+  useEffect(() => {
+    prefetchTmdbArt(bannerItems);
+  }, [bannerKey]);
+  const bannerImage = bannerArtReady
+    ? bannerArt.backdrop || bannerContent?.bannerUrl || bannerContent?.posterUrl
+    : '';
+  const bannerLogo = bannerArt.logo || bannerContent?.logoUrl;
+  const bannerYear = /^\d{4}/.test(String(bannerContent?.releaseDate || ''))
+    ? String(bannerContent?.releaseDate).slice(0, 4)
+    : '';
 
   useEffect(() => {
     if (bannerItems.length > 1) {
@@ -72,6 +89,7 @@ export const Home: React.FC = () => {
 
   const handleTabSelect = (tab: 'movie' | 'tv' | 'live') => {
     setSelectedTab(tab);
+    ensureSection(tab === 'movie' ? 'movies' : tab);
     setCurrentBannerIndex(0);
     setIsMenuOpen(false);
   };
@@ -183,7 +201,7 @@ export const Home: React.FC = () => {
 
       {/* Content Area */}
       <div className="relative z-20 pb-8">
-        {loading ? (
+        {loading || !ready[selectedTab === 'movie' ? 'movies' : selectedTab] ? (
           <div className="space-y-8 pt-24">
             {/* Hero Banner Skeleton */}
             <div className="relative w-full h-[75vh] md:h-[85vh] bg-white/5 overflow-hidden">
@@ -217,7 +235,7 @@ export const Home: React.FC = () => {
                 type="text" 
                 placeholder="Search"
                 value={liveTvSearch}
-                onChange={(e) => setLiveTvSearch(e.target.value)}
+                onChange={(e) => { setLiveTvSearch(e.target.value); setLiveShown(60); }}
                 className="w-full bg-[#1a1a1a] border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/10"
               />
             </div>
@@ -226,30 +244,52 @@ export const Home: React.FC = () => {
             <div className="pb-20">
               {liveTvView === 'cover' ? (
                 <div className="grid grid-cols-3 gap-3">
-                  {searchedLiveTv.map((item) => (
-                    <div key={item.id} className="flex flex-col gap-2">
+                  {searchedLiveTv.slice(0, liveShown).map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => navigate(`/details/${item.id}`)}
+                      className="flex flex-col gap-2 text-left"
+                    >
                       <div className="aspect-square rounded-2xl overflow-hidden bg-white/5 border border-white/5">
-                        <img src={item.posterUrl} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        {item.posterUrl && (
+                          <img src={item.posterUrl} alt="" loading="lazy" decoding="async" className="w-full h-full object-contain p-2" referrerPolicy="no-referrer" />
+                        )}
                       </div>
-                      <div className="h-4 w-full bg-white/5 rounded mt-1"></div>
-                    </div>
+                      <span className="text-xs text-gray-300 truncate w-full">{item.title}</span>
+                    </button>
                   ))}
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {searchedLiveTv.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4 bg-[#1a1a1a] p-3 rounded-2xl border border-white/5">
+                  {searchedLiveTv.slice(0, liveShown).map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => navigate(`/details/${item.id}`)}
+                      className="w-full flex items-center gap-4 bg-[#1a1a1a] p-3 rounded-2xl border border-white/5 text-left"
+                    >
                       <div className="w-16 aspect-square rounded-lg overflow-hidden bg-white/5 flex-shrink-0">
-                        <img src={item.posterUrl} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        {item.posterUrl && (
+                          <img src={item.posterUrl} alt="" loading="lazy" decoding="async" className="w-full h-full object-contain p-1" referrerPolicy="no-referrer" />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="h-4 w-3/4 bg-white/10 rounded mb-2"></div>
-                        <div className="h-3 w-1/2 bg-white/5 rounded"></div>
+                        <div className="text-sm font-medium text-white truncate">{item.title}</div>
+                        <div className="text-xs text-gray-500 truncate">{item.category || 'Live TV'}</div>
                       </div>
-                      <div className="w-8 h-8 rounded-lg bg-white/5 flex-shrink-0"></div>
-                    </div>
+                    </button>
                   ))}
                 </div>
+              )}
+              {searchedLiveTv.length === 0 && (
+                <p className="text-center text-gray-500 pt-10">No channels found.</p>
+              )}
+              {searchedLiveTv.length > liveShown && (
+                <button
+                  onClick={() => setLiveShown((n) => n + 60)}
+                  className="w-full mt-4 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-sm font-semibold"
+                >
+                  Show more ({searchedLiveTv.length - liveShown} left)
+                </button>
               )}
             </div>
 
@@ -289,15 +329,17 @@ export const Home: React.FC = () => {
                   transition={{ duration: 1, ease: "easeInOut" }}
                   className="absolute inset-0"
                 >
-                  <motion.img 
-                    src={bannerContent?.bannerUrl || bannerContent?.posterUrl} 
-                    alt={bannerContent?.title}
-                    initial={{ scale: 1.1 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 6, ease: "linear" }}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
+                  {bannerImage && (
+                    <motion.img
+                      src={bannerImage}
+                      alt=""
+                      initial={{ opacity: 0, scale: 1.1 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ opacity: { duration: 0.6 }, scale: { duration: 6, ease: "linear" } }}
+                      className="w-full h-full object-cover object-top"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
@@ -305,24 +347,19 @@ export const Home: React.FC = () => {
                     transition={{ delay: 0.3, duration: 0.8 }}
                     className="absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end items-center text-center pb-12"
                   >
-                    {bannerContent?.logoUrl ? (
-                      <img 
-                        src={bannerContent.logoUrl} 
-                        alt={bannerContent.title} 
-                        className="h-20 md:h-24 object-contain mb-4"
+                    {bannerLogo && (
+                      <img
+                        src={bannerLogo}
+                        alt=""
+                        className="h-20 md:h-28 max-w-[75%] object-contain mb-4 drop-shadow-[0_4px_16px_rgba(0,0,0,0.7)]"
                         referrerPolicy="no-referrer"
                       />
-                    ) : (
-                      <h2 className="text-3xl md:text-5xl font-black text-[#ccff00] mb-3 tracking-tighter uppercase" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-                        {bannerContent?.title}
-                      </h2>
                     )}
                     <div className="flex items-center justify-center gap-2 text-sm text-gray-300 mb-4 font-medium">
                       {bannerContent?.genre && bannerContent.genre.length > 0 && (
                         <span>{bannerContent.genre[0]}</span>
                       )}
-                      {bannerContent?.genre && bannerContent.genre.length > 0 && <span>•</span>}
-                      <span>2026</span>
+                      {bannerYear && (<>{bannerContent?.genre && bannerContent.genre.length > 0 && <span>•</span>}<span>{bannerYear}</span></>)}
                     </div>
                     <p className="text-sm text-gray-300 line-clamp-2 max-w-md mx-auto mb-6">
                       {bannerContent?.description}

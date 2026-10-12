@@ -76,7 +76,7 @@ export const Search: React.FC = () => {
                 <div className="flex flex-col px-0.5">
                   <span className="text-sm font-medium text-white truncate">{item.title}</span>
                   <span className="text-[11px] text-gray-400 mt-0.5">
-                    {item.genre && item.genre.length > 0 ? item.genre[0] : 'Movie'} · 2026
+                    {item.genre && item.genre.length > 0 ? item.genre[0] : 'Movie'}{/^\d{4}/.test(String((item as any).releaseDate || '')) ? ` · ${String((item as any).releaseDate).slice(0, 4)}` : ''}
                   </span>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,7 @@ interface ContentItem {
   genre?: string[];
   rating?: number;
   watchUrl?: string;
+  releaseDate?: string;
 }
 
 interface ContentRowProps {
@@ -21,6 +22,7 @@ interface ContentRowProps {
 
 export const ContentRow: React.FC<ContentRowProps> = ({ title, items, variant = 'default' }) => {
   const navigate = useNavigate();
+  const [count, setCount] = useState(24);
 
   const handlePrefetch = (url?: string) => {
     if (!url) return;
@@ -38,7 +40,7 @@ export const ContentRow: React.FC<ContentRowProps> = ({ title, items, variant = 
   };
 
   return (
-    <div className="w-full py-2">
+    <div className="w-full py-2" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 280px' }}>
       {title && (
         <div className="flex items-center gap-1 mb-3 cursor-pointer group px-4">
           <h2 className="text-[15px] font-bold text-white uppercase tracking-wide">
@@ -50,8 +52,14 @@ export const ContentRow: React.FC<ContentRowProps> = ({ title, items, variant = 
       
       <div 
         className={`flex ${variant === 'numbered' ? 'gap-10 pl-8 pr-4' : 'gap-3 px-4'} overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4`}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          if (count < items.length && el.scrollLeft + el.clientWidth > el.scrollWidth - 400) {
+            setCount((c) => c + 24);
+          }
+        }}
       >
-        {items.map((item, index) => (
+        {items.slice(0, count).map((item, index) => (
           <motion.div
             key={item.id}
             whileHover={{ scale: 1.02 }}
@@ -73,6 +81,8 @@ export const ContentRow: React.FC<ContentRowProps> = ({ title, items, variant = 
                   src={item.posterUrl} 
                   alt={item.title} 
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -80,7 +90,7 @@ export const ContentRow: React.FC<ContentRowProps> = ({ title, items, variant = 
             <div className="flex flex-col px-0.5">
               <span className="text-sm font-medium text-white truncate">{item.title}</span>
               <span className="text-[11px] text-gray-400 mt-0.5">
-                {item.genre && item.genre.length > 0 ? item.genre[0] : (item.type === 'tv' ? 'TV Series' : 'Movie')} · 2026
+                {item.genre && item.genre.length > 0 ? item.genre[0] : (item.type === 'tv' ? 'TV Series' : 'Movie')}{/^\d{4}/.test(String(item.releaseDate || '')) ? ` · ${String(item.releaseDate).slice(0, 4)}` : ''}
               </span>
             </div>
           </motion.div>
