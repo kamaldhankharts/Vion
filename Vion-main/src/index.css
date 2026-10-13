@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  @keyframes shine {
+    0% { left: -20%; }
+    100% { left: 120%; }
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .skeleton-shine {
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+  
+  .skeleton-shine::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 12px 3px rgba(255, 255, 255, 0.4);
+    transform: skewX(-20deg);
+    animation: shine 1.5s infinite linear;
+  }
+}
+
+/* Stop the Android "stretch" / rubber-band effect when scrolling */
+html,
+body,
+#root {
+  background-color: #000;
+  overscroll-behavior-y: none;
+}
+
+html,
+body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hide all scroll indicators */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}

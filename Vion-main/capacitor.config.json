@@ -1,0 +1,23 @@
+{
+  "appId": "com.blaze.vion",
+  "appName": "Vion",
+  "webDir": "dist",
+  "backgroundColor": "#000000",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    },
+    "FirebaseAuthentication": {
+      "skipNativeAuth": true,
+      "providers": [
+        "google.com"
+      ]
+    }
+  }
+}
