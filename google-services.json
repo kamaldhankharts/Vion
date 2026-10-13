@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "878784004163",
+    "firebase_url": "https://vion-app-by-blaze-default-rtdb.firebaseio.com",
+    "project_id": "vion-app-by-blaze",
+    "storage_bucket": "vion-app-by-blaze.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:878784004163:android:41b6a6b1d0d7443d1054f6",
+        "android_client_info": {
+          "package_name": "com.blaze.vion"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "878784004163-8c6d0ab1esqjtgqq3p3et9tc0cfjo89b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.blaze.vion",
+            "certificate_hash": "fad66815283622402a5cf99b235ee8a89c6adcbe"
+          }
+        },
+        {
+          "client_id": "878784004163-t2mpllsgu15v7gebvdt755k1vjfn5536.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQ1YUA82TWL4U_DpDAtEg4OHFQOwOW7Ag"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "878784004163-t2mpllsgu15v7gebvdt755k1vjfn5536.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
